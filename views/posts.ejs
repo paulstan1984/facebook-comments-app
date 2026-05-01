@@ -55,7 +55,6 @@
     <div class="winner-box">
       <span class="winner-trophy">&#127942;</span>
       <h2 id="winner-title">Winner!</h2>
-      <p class="winner-name" id="winner-name"></p>
       <p class="winner-comment" id="winner-comment"></p>
       <div class="winner-actions">
         <a id="winner-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View Comment</a>
@@ -76,8 +75,17 @@
     <% } %>
 
     <div class="alert alert-info">
-      Showing 30 posts per page. Click <strong>Download CSV</strong> to export
+      Showing 10 posts per page. Click <strong>Download CSV</strong> to export
       all comments for that post as a three-column spreadsheet (Name, Comment, Link).
+    </div>
+
+    <div class="pagination">
+      <% if (!isFirstPage) { %>
+        <a href="/pages/<%= pageId %>/posts" class="btn">&#8592; First page</a>
+      <% } %>
+      <% if (nextCursor) { %>
+        <a href="/pages/<%= pageId %>/posts?after=<%= encodeURIComponent(nextCursor) %>" class="btn">Next page &#8594;</a>
+      <% } %>
     </div>
 
     <% if (posts.length === 0) { %>

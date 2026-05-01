@@ -22,7 +22,6 @@
         if (!data.winner)          { alert('No comments found for this post.'); return; }
 
         // Populate and show the modal
-        document.getElementById('winner-name').textContent    = data.winner.Name;
         document.getElementById('winner-comment').textContent = data.winner.Comment;
         var modalLink = document.getElementById('winner-link');
         if (data.winner.Link) { modalLink.href = data.winner.Link; modalLink.style.display = ''; }
