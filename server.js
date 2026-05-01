@@ -264,13 +264,19 @@ app.get('/export/:pageId/:postId', requireAuth, async (req, res) => {
   }
 
   try {
-    // Re-fetch the page token so the export works even after a session reload
-    const pageRes = await fbGet(`${GRAPH_BASE}/${pageId}`, {
-      fields: 'access_token',
+    // Re-fetch the page token via /me/accounts (same approach as the posts route)
+    const accountsRes = await fbGet(`${GRAPH_BASE}/me/accounts`, {
       access_token: req.session.accessToken,
+      fields: 'id,access_token',
+      limit: 100,
     });
 
-    const pageToken = pageRes.data.access_token;
+    const page = (accountsRes.data.data || []).find(p => p.id === pageId);
+    if (!page) {
+      return res.redirect(`/pages/${pageId}/posts?error=api_error`);
+    }
+
+    const pageToken = page.access_token;
     const comments  = await getAllComments(postId, pageToken);
 
     // BOM prefix makes Excel open UTF-8 CSVs correctly without garbling characters
