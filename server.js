@@ -89,7 +89,7 @@ const FB_ERROR_MESSAGES = {
  * Fetches every comment on a post, following cursor pagination.
  * Returns an array of { Name, Comment } objects ready for CSV serialization.
  */
-const getAllComments = async (postId, pageToken) => {
+const getAllComments = async (postId, pageToken, userToken) => {
   const comments = [];
 
   // First request uses explicit params; subsequent requests follow `next` URLs
@@ -109,17 +109,17 @@ const getAllComments = async (postId, pageToken) => {
       let name = comment.from?.name;
 
       // If name is missing but we have the commenter's ID, attempt a direct
-      // lookup requesting first_name and last_name separately.
+      // lookup. Use the user token (broader scope) then fall back to the page
+      // token. Request name, first_name, and last_name for the best chance of
+      // resolving the commenter's display name on public profiles.
       if (!name && comment.from?.id) {
         try {
           const userRes = await fbGet(`${GRAPH_BASE}/${comment.from.id}`, {
-            access_token: pageToken,
-            fields: 'first_name,last_name',
+            access_token: userToken || pageToken,
+            fields: 'name,first_name,last_name',
           });
-          const { first_name, last_name } = userRes.data;
-          if (first_name || last_name) {
-            name = [first_name, last_name].filter(Boolean).join(' ');
-          }
+          const { name: fullName, first_name, last_name } = userRes.data;
+          name = fullName || [first_name, last_name].filter(Boolean).join(' ') || null;
         } catch {
           // leave name undefined, fall back to Anonymous below
         }
@@ -300,7 +300,7 @@ app.get('/export/:pageId/:postId', requireAuth, async (req, res) => {
     }
 
     const pageToken = page.access_token;
-    const comments  = await getAllComments(postId, pageToken);
+    const comments  = await getAllComments(postId, pageToken, req.session.accessToken);
 
     // BOM prefix makes Excel open UTF-8 CSVs correctly without garbling characters
     const csv = '\uFEFF' + stringify(comments, {
