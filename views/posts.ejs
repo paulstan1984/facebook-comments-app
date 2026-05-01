@@ -43,81 +43,6 @@
       justify-content: center;
       margin: 1.5rem 0;
     }
-    /* ── Slideshow gallery ── */
-    .gallery {
-      position: relative;
-      background: #000;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 1.5rem;
-      aspect-ratio: 16/7;
-    }
-    .gallery-slide {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      transition: opacity .5s ease;
-    }
-    .gallery-slide.active { opacity: 1; }
-    .gallery-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    .gallery-slide a {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: flex-end;
-    }
-    .gallery-caption {
-      width: 100%;
-      background: linear-gradient(transparent, rgba(0,0,0,.65));
-      color: #fff;
-      font-size: .82rem;
-      padding: 24px 14px 10px;
-      line-height: 1.4;
-    }
-    .gallery-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(0,0,0,.4);
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      width: 36px; height: 36px;
-      font-size: 1.1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      transition: background .15s;
-    }
-    .gallery-nav:hover { background: rgba(0,0,0,.65); }
-    .gallery-prev { left: 10px; }
-    .gallery-next { right: 10px; }
-    .gallery-dots {
-      position: absolute;
-      bottom: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 6px;
-      z-index: 10;
-    }
-    .gallery-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: rgba(255,255,255,.5);
-      border: none;
-      cursor: pointer;
-      padding: 0;
-      transition: background .2s;
-    }
-    .gallery-dot.active { background: #fff; }
   </style>
 </head>
 <body>
@@ -163,37 +88,6 @@
         <a href="/pages/<%= pageId %>/posts" class="btn btn-muted" style="padding:6px 16px;">Clear</a>
       <% } %>
     </form>
-
-    <% const galleryPosts = posts.filter(p => p.full_picture).slice(0, 10); %>
-    <% if (galleryPosts.length > 0) { %>
-    <div class="gallery" id="gallery">
-      <% galleryPosts.forEach(function(gp, i) { %>
-        <%
-          const gpText = (gp.message || gp.story || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-          const gpSnippet = gpText.length > 80 ? gpText.slice(0, 80) + '\u2026' : gpText;
-        %>
-        <div class="gallery-slide<%= i === 0 ? ' active' : '' %>">
-          <img src="<%- gp.full_picture %>" alt="Post image <%= i + 1 %>" loading="<%= i === 0 ? 'eager' : 'lazy' %>">
-          <% if (gp.permalink_url) { %>
-            <a href="<%- gp.permalink_url %>" target="_blank" rel="noopener noreferrer">
-              <span class="gallery-caption"><%= gpSnippet %></span>
-            </a>
-          <% } else if (gpSnippet) { %>
-            <span class="gallery-caption" style="position:absolute;bottom:0;width:100%;"><%= gpSnippet %></span>
-          <% } %>
-        </div>
-      <% }); %>
-      <% if (galleryPosts.length > 1) { %>
-        <button class="gallery-nav gallery-prev" aria-label="Previous">&#8249;</button>
-        <button class="gallery-nav gallery-next" aria-label="Next">&#8250;</button>
-        <div class="gallery-dots">
-          <% galleryPosts.forEach(function(_, i) { %>
-            <button class="gallery-dot<%= i === 0 ? ' active' : '' %>" aria-label="Go to slide <%= i + 1 %>"></button>
-          <% }); %>
-        </div>
-      <% } %>
-    </div>
-    <% } %>
 
     <div class="pagination">
       <% if (!isFirstPage) { %>
