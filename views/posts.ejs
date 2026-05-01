@@ -8,9 +8,9 @@
   <style>
     .post-actions {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
+      flex-direction: row;
       gap: .5rem;
+      flex-wrap: wrap;
     }
     .btn-winner { background: #f5a623; color: #fff; }
     #winner-modal {
@@ -114,35 +114,31 @@
           <% if (post.full_picture) { %>
             <img src="<%- post.full_picture %>" alt="Post image" class="post-image">
           <% } %>
-          <div class="post-card-body">
-            <div class="post-body">
-              <p class="post-message"><%= rawText %></p>
-              <p class="post-date">
-                <%= date %>
-                <% const commentCount = post.comments?.summary?.total_count; %>
-                <% if (commentCount != null) { %>
-                  &mdash; &#128172;&nbsp;<%= commentCount %> comment<%= commentCount !== 1 ? 's' : '' %>
-                <% } %>
-                <% if (post.permalink_url) { %>
-                  &mdash; <a href="<%- post.permalink_url %>" target="_blank" rel="noopener noreferrer">View on Facebook</a>
-                <% } %>
-              </p>
-            </div>
-            <div class="post-actions">
-              <button
-                class="btn btn-winner winner-btn"
-                data-page-id="<%= pageId %>"
-                data-post-id="<%= post.id %>"
-              >&#127942;&nbsp;Choose Winner</button>
-              <a
-                class="btn btn-primary view-winner-link"
-                href="#"
-                target="_blank"
-                rel="noopener noreferrer"
-                style="display:none"
-              >&#127942;&nbsp;View the Winner</a>
-            </div>
+          <p class="post-date">
+            <%= date %>
+            <% const commentCount = post.comments?.summary?.total_count; %>
+            <% if (commentCount != null) { %>
+              &mdash; &#128172;&nbsp;<%= commentCount %> comment<%= commentCount !== 1 ? 's' : '' %>
+            <% } %>
+            <% if (post.permalink_url) { %>
+              &mdash; <a href="<%- post.permalink_url %>" target="_blank" rel="noopener noreferrer">View on Facebook</a>
+            <% } %>
+          </p>
+          <div class="post-actions">
+            <button
+              class="btn btn-winner winner-btn"
+              data-page-id="<%= pageId %>"
+              data-post-id="<%= post.id %>"
+            >&#127942;&nbsp;Choose Winner</button>
+            <a
+              class="btn btn-primary view-winner-link"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              style="display:none"
+            >&#127942;&nbsp;View the Winner</a>
           </div>
+          <p class="post-message"><%= rawText %></p>
         </div>
       <% } %>
     <% } %>
