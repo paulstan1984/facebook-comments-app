@@ -69,7 +69,12 @@
         <div class="card post-card">
           <div class="post-body">
             <p class="post-message"><%= rawText %></p>
-            <p class="post-date"><%= date %></p>
+            <p class="post-date">
+              <%= date %>
+              <% if (post.permalink_url) { %>
+                &mdash; <a href="<%- post.permalink_url %>" target="_blank" rel="noopener noreferrer">View on Facebook</a>
+              <% } %>
+            </p>
           </div>
           <div class="post-actions">
             <a

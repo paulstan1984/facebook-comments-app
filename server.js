@@ -97,7 +97,7 @@ const getAllComments = async (postId, pageToken) => {
   let url    = `${GRAPH_BASE}/${postId}/comments`;
   let params = {
     access_token: pageToken,
-    fields: 'from{name},message',
+    fields: 'from{name,id},message',
     filter: 'stream', // includes all comments, not just top-level
     limit:  100,
   };
@@ -106,9 +106,31 @@ const getAllComments = async (postId, pageToken) => {
     const response = await fbGet(url, params);
 
     for (const comment of response.data.data || []) {
+      let name = comment.from?.name;
+
+      // If name is missing but we have the commenter's ID, attempt a direct
+      // lookup requesting first_name and last_name separately.
+      if (!name && comment.from?.id) {
+        try {
+          const userRes = await fbGet(`${GRAPH_BASE}/${comment.from.id}`, {
+            access_token: pageToken,
+            fields: 'first_name,last_name',
+          });
+          const { first_name, last_name } = userRes.data;
+          if (first_name || last_name) {
+            name = [first_name, last_name].filter(Boolean).join(' ');
+          }
+        } catch {
+          // leave name undefined, fall back to Anonymous below
+        }
+      }
+
+      const message = comment.message || '';
+      if (!message.trim()) continue; // skip empty comments
+
       comments.push({
-        Name:    comment.from?.name || 'Anonymous',
-        Comment: comment.message   || '',
+        Name:    name || 'Anonymous',
+        Comment: message,
       });
     }
 
@@ -236,7 +258,7 @@ app.get('/pages/:pageId/posts', requireAuth, async (req, res) => {
 
     const postsRes = await fbGet(`${GRAPH_BASE}/${pageId}/posts`, {
       access_token: pageToken,
-      fields: 'id,message,story,created_time',
+      fields: 'id,message,story,created_time,permalink_url',
       limit: 50,
     });
 
