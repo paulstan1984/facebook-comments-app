@@ -89,7 +89,7 @@ const FB_ERROR_MESSAGES = {
  * Fetches every comment on a post, following cursor pagination.
  * Returns an array of { Name, Comment } objects ready for CSV serialization.
  */
-const getAllComments = async (postId, pageToken, userToken) => {
+const getAllComments = async (postId, pageToken, userToken, postPermalink) => {
   const comments = [];
 
   // First request uses explicit params; subsequent requests follow `next` URLs
@@ -97,7 +97,7 @@ const getAllComments = async (postId, pageToken, userToken) => {
   let url    = `${GRAPH_BASE}/${postId}/comments`;
   let params = {
     access_token: pageToken,
-    fields: 'from{name,id},message',
+    fields: 'id,from{name,id},message',
     filter: 'stream', // includes all comments, not just top-level
     limit:  100,
   };
@@ -128,9 +128,14 @@ const getAllComments = async (postId, pageToken, userToken) => {
       const message = comment.message || '';
       if (!message.trim()) continue; // skip empty comments
 
+      const commentLink = postPermalink && comment.id
+        ? `${postPermalink}?comment_id=${comment.id}`
+        : '';
+
       comments.push({
         Name:    name || 'Anonymous',
         Comment: message,
+        Link:    commentLink,
       });
     }
 
@@ -256,18 +261,26 @@ app.get('/pages/:pageId/posts', requireAuth, async (req, res) => {
     const pageToken = page.access_token;
     const pageName  = page.name;
 
+    const { after } = req.query;
     const postsRes = await fbGet(`${GRAPH_BASE}/${pageId}/posts`, {
       access_token: pageToken,
-      fields: 'id,message,story,created_time,permalink_url',
-      limit: 50,
+      fields: 'id,message,story,created_time,permalink_url,comments.summary(true)',
+      limit: 30,
+      ...(after ? { after } : {}),
     });
 
+    const nextCursor = postsRes.data.paging?.next
+      ? (postsRes.data.paging.cursors?.after || null)
+      : null;
+
     res.render('posts', {
-      posts:    postsRes.data.data || [],
+      posts:      postsRes.data.data || [],
       pageId,
       pageName,
-      userName: req.session.userName,
-      error:    req.query.error ? FB_ERROR_MESSAGES[req.query.error] || FB_ERROR_MESSAGES.api_error : null,
+      userName:   req.session.userName,
+      nextCursor,
+      isFirstPage: !after,
+      error:      req.query.error ? FB_ERROR_MESSAGES[req.query.error] || FB_ERROR_MESSAGES.api_error : null,
     });
   } catch (err) {
     const fbErr = err.response?.data?.error;
@@ -300,12 +313,23 @@ app.get('/export/:pageId/:postId', requireAuth, async (req, res) => {
     }
 
     const pageToken = page.access_token;
-    const comments  = await getAllComments(postId, pageToken, req.session.accessToken);
+
+    // Fetch the post's permalink so comment links can be included in the CSV
+    let postPermalink = null;
+    try {
+      const postRes = await fbGet(`${GRAPH_BASE}/${postId}`, {
+        access_token: pageToken,
+        fields: 'permalink_url',
+      });
+      postPermalink = postRes.data.permalink_url || null;
+    } catch { /* non-critical — comment links will be blank if this fails */ }
+
+    const comments  = await getAllComments(postId, pageToken, req.session.accessToken, postPermalink);
 
     // BOM prefix makes Excel open UTF-8 CSVs correctly without garbling characters
     const csv = '\uFEFF' + stringify(comments, {
       header:  true,
-      columns: ['Name', 'Comment'],
+      columns: ['Name', 'Comment', 'Link'],
     });
 
     const filename = `comments-${postId}-${Date.now()}.csv`;
