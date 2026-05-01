@@ -78,10 +78,11 @@ const requireAuth = (req, res, next) => {
 };
 
 const FB_ERROR_MESSAGES = {
-  session_expired: 'Your session has expired. Please log in again.',
-  auth_failed:     'Authentication failed. Please try again.',
-  api_error:       'A Facebook API error occurred. Please try again.',
-  invalid_post:    'Invalid post reference.',
+  session_expired:  'Your session has expired. Please log in again.',
+  permission_error: 'Your account needs additional permissions to read comments. Please log out and log back in to grant them.',
+  auth_failed:      'Authentication failed. Please try again.',
+  api_error:        'A Facebook API error occurred. Please try again.',
+  invalid_post:     'Invalid post reference.',
 };
 
 /**
@@ -134,7 +135,7 @@ app.get('/auth/facebook', (req, res) => {
   const params = new URLSearchParams({
     client_id:     FB_APP_ID,
     redirect_uri:  FB_REDIRECT_URI,
-    scope:         'pages_show_list,pages_read_engagement',
+    scope:         'pages_show_list,pages_read_engagement,pages_read_user_content',
     response_type: 'code',
   });
   res.redirect(`https://www.facebook.com/${FB_API_VERSION}/dialog/oauth?${params}`);
@@ -292,9 +293,15 @@ app.get('/export/:pageId/:postId', requireAuth, async (req, res) => {
   } catch (err) {
     const fbErr = err.response?.data?.error;
     console.error('[export]', fbErr || err.message);
-    const dest = fbErr?.code === 190
-      ? '/?error=session_expired'
-      : `/pages/${pageId}/posts?error=api_error`;
+    let dest;
+    if (fbErr?.code === 190) {
+      dest = '/?error=session_expired';
+    } else if (fbErr?.code === 10 || fbErr?.code === 283 || fbErr?.code === 200) {
+      // Missing pages_read_engagement or pages_read_user_content — prompt re-login
+      dest = `/pages/${pageId}/posts?error=permission_error`;
+    } else {
+      dest = `/pages/${pageId}/posts?error=api_error`;
+    }
     res.redirect(dest);
   }
 });
