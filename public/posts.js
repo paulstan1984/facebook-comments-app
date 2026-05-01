@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  var load = window.AppLoading || { show: function(){}, hide: function(){} };
+
   // ── Winner picker ──────────────────────────────────────────────────────────
   document.querySelectorAll('.winner-btn').forEach(function (btn) {
     btn.addEventListener('click', async function () {
@@ -10,6 +12,7 @@
 
       btn.disabled    = true;
       btn.textContent = 'Picking\u2026';
+      load.show('Picking a winner\u2026');
 
       try {
         const res  = await fetch('/winner/' + pageId + '/' + postId);
@@ -29,7 +32,7 @@
         // Show per-card "View the Winner" link
         if (viewBtn) {
           if (data.winner.Link) {
-            viewBtn.href         = data.winner.Link;
+            viewBtn.href          = data.winner.Link;
             viewBtn.style.display = '';
           } else {
             viewBtn.style.display = 'none';
@@ -38,6 +41,7 @@
       } catch (e) {
         alert('An error occurred. Please try again.');
       } finally {
+        load.hide();
         btn.disabled  = false;
         btn.innerHTML = '&#127942;\u00a0Choose Winner';
       }
@@ -55,14 +59,15 @@
     });
   }
 
-  // ── CSV download overlay ───────────────────────────────────────────────────
+  // ── CSV download spinner ───────────────────────────────────────────────────
   document.querySelectorAll('.export-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.getElementById('loading-overlay').classList.add('visible');
+      load.show('Fetching all comments\u2026 this may take a moment.');
       window.addEventListener('focus', function hide() {
-        document.getElementById('loading-overlay').classList.remove('visible');
+        load.hide();
         window.removeEventListener('focus', hide);
       });
     });
   });
 }());
+
