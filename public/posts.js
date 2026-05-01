@@ -3,6 +3,42 @@
 
   var load = window.AppLoading || { show: function(){}, hide: function(){} };
 
+  // ── Slideshow gallery ──────────────────────────────────────────────────────
+  var gallery = document.getElementById('gallery');
+  if (gallery) {
+    var slides = Array.from(gallery.querySelectorAll('.gallery-slide'));
+    var dots   = Array.from(gallery.querySelectorAll('.gallery-dot'));
+    var current = 0;
+    var timer;
+
+    function goTo(n) {
+      slides[current].classList.remove('active');
+      dots[current] && dots[current].classList.remove('active');
+      current = (n + slides.length) % slides.length;
+      slides[current].classList.add('active');
+      dots[current] && dots[current].classList.add('active');
+    }
+
+    function startAuto() {
+      timer = setInterval(function() { goTo(current + 1); }, 4000);
+    }
+
+    function resetAuto() {
+      clearInterval(timer);
+      startAuto();
+    }
+
+    var prevBtn = gallery.querySelector('.gallery-prev');
+    var nextBtn = gallery.querySelector('.gallery-next');
+    if (prevBtn) prevBtn.addEventListener('click', function() { goTo(current - 1); resetAuto(); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { goTo(current + 1); resetAuto(); });
+    dots.forEach(function(dot, i) {
+      dot.addEventListener('click', function() { goTo(i); resetAuto(); });
+    });
+
+    if (slides.length > 1) startAuto();
+  }
+
   // ── Winner picker ──────────────────────────────────────────────────────────
   document.querySelectorAll('.winner-btn').forEach(function (btn) {
     btn.addEventListener('click', async function () {
