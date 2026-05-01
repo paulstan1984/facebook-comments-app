@@ -128,8 +128,9 @@ const getAllComments = async (postId, pageToken, userToken, postPermalink) => {
       const message = comment.message || '';
       if (!message.trim()) continue; // skip empty comments
 
-      const commentLink = postPermalink && comment.id
-        ? `${postPermalink}?comment_id=${comment.id}`
+      const bareCommentId = comment.id ? comment.id.split('_').pop() : null;
+      const commentLink = postPermalink && bareCommentId
+        ? `${postPermalink}?comment_id=${bareCommentId}`
         : '';
 
       comments.push({
