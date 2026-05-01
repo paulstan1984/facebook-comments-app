@@ -50,7 +50,7 @@
     <% } %>
 
     <div class="alert alert-info">
-      Showing the 20 most recent posts. Click <strong>Download CSV</strong> to export
+      Showing the 50 most recent posts. Click <strong>Download CSV</strong> to export
       all comments for that post as a two-column spreadsheet (Name, Comment).
     </div>
 
@@ -61,15 +61,14 @@
     <% } else { %>
       <% for (const post of posts) { %>
         <%
-          const rawText = post.message || post.story || '';
-          const preview = rawText.length > 160 ? rawText.substring(0, 160) + '…' : rawText || '(No text)';
+          const rawText = post.message || post.story || '(No text)';
           const date = new Date(post.created_time).toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric'
           });
         %>
         <div class="card post-card">
           <div class="post-body">
-            <p class="post-message"><%= preview %></p>
+            <p class="post-message"><%= rawText %></p>
             <p class="post-date"><%= date %></p>
           </div>
           <div class="post-actions">
