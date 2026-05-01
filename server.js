@@ -217,14 +217,21 @@ app.get('/pages/:pageId/posts', requireAuth, async (req, res) => {
   const { pageId } = req.params;
 
   try {
-    // Retrieve the Page-scoped access token (required to read page content)
-    const pageRes = await fbGet(`${GRAPH_BASE}/${pageId}`, {
-      fields: 'id,name,access_token',
+    // Retrieve the Page-scoped access token via /me/accounts (more reliable than
+    // fetching the page object directly, which fails for New Page Experience pages)
+    const accountsRes = await fbGet(`${GRAPH_BASE}/me/accounts`, {
       access_token: req.session.accessToken,
+      fields: 'id,name,access_token',
+      limit: 100,
     });
 
-    const pageToken = pageRes.data.access_token;
-    const pageName  = pageRes.data.name;
+    const page = (accountsRes.data.data || []).find(p => p.id === pageId);
+    if (!page) {
+      return res.redirect('/pages?error=api_error');
+    }
+
+    const pageToken = page.access_token;
+    const pageName  = page.name;
 
     const postsRes = await fbGet(`${GRAPH_BASE}/${pageId}/posts`, {
       access_token: pageToken,
