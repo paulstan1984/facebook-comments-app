@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Pages – Facebook Comments Exporter</title>
+  <%- include('partials/_styles') %>
+</head>
+<body>
+  <%- include('partials/_nav') %>
+
+  <main>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <h1 class="page-title">Your Pages</h1>
+
+    <% if (pages.length === 0) { %>
+      <div class="card">
+        <p class="empty">
+          No Pages found. Make sure you granted the <strong>pages_show_list</strong>
+          permission when you logged in, and that you manage at least one Page.
+        </p>
+      </div>
+    <% } else { %>
+      <div class="pages-grid">
+        <% for (const page of pages) { %>
+          <div class="card page-card">
+            <% if (page.picture?.data?.url) { %>
+              <img
+                src="<%= page.picture.data.url %>"
+                alt="<%= page.name %> profile picture"
+                class="page-pic"
+              >
+            <% } %>
+            <span class="page-name"><%= page.name %></span>
+            <a href="/pages/<%= page.id %>/posts" class="btn btn-primary">View Posts</a>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+  </main>
+</body>
+</html>

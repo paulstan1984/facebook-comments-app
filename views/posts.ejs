@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= pageName %> – Posts</title>
+  <%- include('partials/_styles') %>
+  <style>
+    /* Loading overlay shown while the CSV is being generated */
+    #loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      color: #fff;
+      font-size: 1rem;
+    }
+    #loading-overlay.visible { display: flex; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <!-- Loading overlay (shown while comments are being fetched) -->
+  <div id="loading-overlay" role="status" aria-live="polite">
+    <div class="spinner"></div>
+    <span>Fetching all comments&hellip; this may take a moment.</span>
+  </div>
+
+  <%- include('partials/_nav') %>
+
+  <main>
+    <a href="/pages" class="back-link">&#8592; Back to Pages</a>
+
+    <h1 class="page-title">Posts &ndash; <%= pageName %></h1>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="alert alert-info">
+      Showing the 20 most recent posts. Click <strong>Download CSV</strong> to export
+      all comments for that post as a two-column spreadsheet (Name, Comment).
+    </div>
+
+    <% if (posts.length === 0) { %>
+      <div class="card">
+        <p class="empty">No posts found for this page.</p>
+      </div>
+    <% } else { %>
+      <% for (const post of posts) { %>
+        <%
+          const rawText = post.message || post.story || '';
+          const preview = rawText.length > 160 ? rawText.substring(0, 160) + '…' : rawText || '(No text)';
+          const date = new Date(post.created_time).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+        %>
+        <div class="card post-card">
+          <div class="post-body">
+            <p class="post-message"><%= preview %></p>
+            <p class="post-date"><%= date %></p>
+          </div>
+          <div class="post-actions">
+            <a
+              href="/export/<%= pageId %>/<%= post.id %>"
+              class="btn btn-success export-btn"
+            >&#8681;&nbsp;Download CSV</a>
+          </div>
+        </div>
+      <% } %>
+    <% } %>
+  </main>
+
+  <script>
+    // Show the loading overlay when a CSV download starts so the user knows
+    // the server is paginating through the Facebook API.
+    document.querySelectorAll('.export-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.getElementById('loading-overlay').classList.add('visible');
+        // Hide it once the browser triggers the file download (focus returns)
+        window.addEventListener('focus', function hide() {
+          document.getElementById('loading-overlay').classList.remove('visible');
+          window.removeEventListener('focus', hide);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

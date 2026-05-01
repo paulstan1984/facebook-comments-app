@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facebook Comments Exporter</title>
+  <%- include('partials/_styles') %>
+</head>
+<body>
+  <%- include('partials/_nav') %>
+
+  <main>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <% if (isLoggedIn) { %>
+      <div class="card hero">
+        <h2>Welcome back, <%= userName %>!</h2>
+        <p>Choose one of your Pages to browse posts and download their comments as a CSV file.</p>
+        <a href="/pages" class="btn btn-primary">View My Pages</a>
+      </div>
+    <% } else { %>
+      <div class="card hero">
+        <h2>Export Facebook Page Comments</h2>
+        <p>
+          Log in with Facebook to export comments from any post on your Page
+          as a two-column CSV file (Name, Comment).
+        </p>
+        <a href="/auth/facebook" class="btn btn-facebook">&#128274;&nbsp; Log in with Facebook</a>
+      </div>
+    <% } %>
+  </main>
+</body>
+</html>

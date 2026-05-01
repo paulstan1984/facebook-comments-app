@@ -1,0 +1,31 @@
+# fly.toml app configuration file generated for facebook-comments-app on 2026-04-20T20:05:22+03:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'facebook-comments-app'
+primary_region = 'ams'
+
+[build]
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '3000'
+  FB_REDIRECT_URI = 'https://facebook-comments-app.fly.dev/auth/facebook/callback' 
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = 'connections'
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = '256mb'
+  cpus = 1
+  memory_mb = 256
