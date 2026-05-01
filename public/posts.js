@@ -58,15 +58,5 @@
     });
   }
 
-  // ── CSV download spinner ───────────────────────────────────────────────────
-  document.querySelectorAll('.export-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      load.show('Fetching all comments\u2026 this may take a moment.');
-      window.addEventListener('focus', function hide() {
-        load.hide();
-        window.removeEventListener('focus', hide);
-      });
-    });
-  });
 }());
 

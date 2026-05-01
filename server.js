@@ -264,26 +264,36 @@ app.get('/pages/:pageId/posts', requireAuth, async (req, res) => {
     const pageToken = page.access_token;
     const pageName  = page.name;
 
-    const { after } = req.query;
+    const { after, date } = req.query;
+
+    // When a date is selected, convert it to Unix since/until and reset pagination
+    let since, until;
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      const d = new Date(date + 'T00:00:00Z');
+      since = Math.floor(d.getTime() / 1000);
+      until = since + 86400;
+    }
+
     const postsRes = await fbGet(`${GRAPH_BASE}/${pageId}/posts`, {
       access_token: pageToken,
-      fields: 'id,message,story,created_time,permalink_url,comments.summary(true)',
+      fields: 'id,message,story,created_time,permalink_url,full_picture,comments.summary(true)',
       limit: 10,
-      ...(after ? { after } : {}),
+      ...(since ? { since, until } : (after ? { after } : {})),
     });
 
-    const nextCursor = postsRes.data.paging?.next
+    const nextCursor = !since && postsRes.data.paging?.next
       ? (postsRes.data.paging.cursors?.after || null)
       : null;
 
     res.render('posts', {
-      posts:      postsRes.data.data || [],
+      posts:       postsRes.data.data || [],
       pageId,
       pageName,
-      userName:   req.session.userName,
+      userName:    req.session.userName,
       nextCursor,
-      isFirstPage: !after,
-      error:      req.query.error ? FB_ERROR_MESSAGES[req.query.error] || FB_ERROR_MESSAGES.api_error : null,
+      isFirstPage: !after || !!since,
+      selectedDate: date || '',
+      error:       req.query.error ? FB_ERROR_MESSAGES[req.query.error] || FB_ERROR_MESSAGES.api_error : null,
     });
   } catch (err) {
     const fbErr = err.response?.data?.error;

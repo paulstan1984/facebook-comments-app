@@ -6,10 +6,6 @@
   <title><%= pageName %> – Posts</title>
   <%- include('partials/_styles') %>
   <style>
-    .comment-count {
-      font-size: .875rem;
-      color: #555;
-    }
     .post-actions {
       display: flex;
       flex-direction: column;
@@ -75,16 +71,30 @@
     <% } %>
 
     <div class="alert alert-info">
-      Showing 10 posts per page. Click <strong>Download CSV</strong> to export
-      all comments for that post as a three-column spreadsheet (Name, Comment, Link).
+      Showing 10 posts per page.
     </div>
+
+    <form method="get" action="/pages/<%= pageId %>/posts" style="margin-bottom:1rem;display:flex;gap:.5rem;align-items:center;">
+      <label for="date-filter" style="font-size:.9rem;font-weight:600;">Filter by date:</label>
+      <input
+        type="date"
+        id="date-filter"
+        name="date"
+        value="<%= selectedDate %>"
+        style="padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:.9rem;"
+      >
+      <button type="submit" class="btn btn-primary" style="padding:6px 16px;">Apply</button>
+      <% if (selectedDate) { %>
+        <a href="/pages/<%= pageId %>/posts" class="btn btn-muted" style="padding:6px 16px;">Clear</a>
+      <% } %>
+    </form>
 
     <div class="pagination">
       <% if (!isFirstPage) { %>
-        <a href="/pages/<%= pageId %>/posts" class="btn">&#8592; First page</a>
+        <a href="/pages/<%= pageId %>/posts<%= selectedDate ? '?date=' + selectedDate : '' %>" class="btn">&#8592; First page</a>
       <% } %>
       <% if (nextCursor) { %>
-        <a href="/pages/<%= pageId %>/posts?after=<%= encodeURIComponent(nextCursor) %>" class="btn">Next page &#8594;</a>
+        <a href="/pages/<%= pageId %>/posts?after=<%= encodeURIComponent(nextCursor) %><%= selectedDate ? '&date=' + selectedDate : '' %>" class="btn">Next page &#8594;</a>
       <% } %>
     </div>
 
@@ -101,36 +111,37 @@
           });
         %>
         <div class="card post-card">
-          <div class="post-body">
-            <p class="post-message"><%= rawText %></p>
-            <p class="post-date">
-              <%= date %>
-              <% const commentCount = post.comments?.summary?.total_count; %>
-              <% if (commentCount != null) { %>
-                &mdash; &#128172;&nbsp;<%= commentCount %> comment<%= commentCount !== 1 ? 's' : '' %>
-              <% } %>
-              <% if (post.permalink_url) { %>
-                &mdash; <a href="<%- post.permalink_url %>" target="_blank" rel="noopener noreferrer">View on Facebook</a>
-              <% } %>
-            </p>
-          </div>
-          <div class="post-actions">
-            <a
-              href="/export/<%= pageId %>/<%= post.id %>"
-              class="btn btn-success export-btn"
-            >&#8681;&nbsp;Download CSV</a>
-            <button
-              class="btn btn-winner winner-btn"
-              data-page-id="<%= pageId %>"
-              data-post-id="<%= post.id %>"
-            >&#127942;&nbsp;Choose Winner</button>
-            <a
-              class="btn btn-primary view-winner-link"
-              href="#"
-              target="_blank"
-              rel="noopener noreferrer"
-              style="display:none"
-            >&#127942;&nbsp;View the Winner</a>
+          <% if (post.full_picture) { %>
+            <img src="<%- post.full_picture %>" alt="Post image" class="post-image">
+          <% } %>
+          <div class="post-card-body">
+            <div class="post-body">
+              <p class="post-message"><%= rawText %></p>
+              <p class="post-date">
+                <%= date %>
+                <% const commentCount = post.comments?.summary?.total_count; %>
+                <% if (commentCount != null) { %>
+                  &mdash; &#128172;&nbsp;<%= commentCount %> comment<%= commentCount !== 1 ? 's' : '' %>
+                <% } %>
+                <% if (post.permalink_url) { %>
+                  &mdash; <a href="<%- post.permalink_url %>" target="_blank" rel="noopener noreferrer">View on Facebook</a>
+                <% } %>
+              </p>
+            </div>
+            <div class="post-actions">
+              <button
+                class="btn btn-winner winner-btn"
+                data-page-id="<%= pageId %>"
+                data-post-id="<%= post.id %>"
+              >&#127942;&nbsp;Choose Winner</button>
+              <a
+                class="btn btn-primary view-winner-link"
+                href="#"
+                target="_blank"
+                rel="noopener noreferrer"
+                style="display:none"
+              >&#127942;&nbsp;View the Winner</a>
+            </div>
           </div>
         </div>
       <% } %>
@@ -138,10 +149,10 @@
 
     <div class="pagination">
       <% if (!isFirstPage) { %>
-        <a href="/pages/<%= pageId %>/posts" class="btn">&#8592; First page</a>
+        <a href="/pages/<%= pageId %>/posts<%= selectedDate ? '?date=' + selectedDate : '' %>" class="btn">&#8592; First page</a>
       <% } %>
       <% if (nextCursor) { %>
-        <a href="/pages/<%= pageId %>/posts?after=<%= encodeURIComponent(nextCursor) %>" class="btn">Next page &#8594;</a>
+        <a href="/pages/<%= pageId %>/posts?after=<%= encodeURIComponent(nextCursor) %><%= selectedDate ? '&date=' + selectedDate : '' %>" class="btn">Next page &#8594;</a>
       <% } %>
     </div>
   </main>
