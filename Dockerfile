@@ -19,6 +19,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json server.js ./
 COPY views ./views
+COPY public ./public
 
 RUN chown -R appuser:appgroup /app
 
