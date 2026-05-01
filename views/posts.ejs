@@ -62,7 +62,6 @@
       <% for (const post of posts) { %>
         <%
           const rawText = post.message || post.story || '(No text)';
-          const commentCount = post.comments?.summary?.total_count ?? '–';
           const date = new Date(post.created_time).toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric'
           });
@@ -70,7 +69,7 @@
         <div class="card post-card">
           <div class="post-body">
             <p class="post-message"><%= rawText %></p>
-            <p class="post-date"><%= date %> &middot; <strong><%= commentCount %></strong> comment<%= commentCount === 1 ? '' : 's' %></p>
+            <p class="post-date"><%= date %></p>
           </div>
           <div class="post-actions">
             <a

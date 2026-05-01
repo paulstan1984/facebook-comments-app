@@ -235,7 +235,7 @@ app.get('/pages/:pageId/posts', requireAuth, async (req, res) => {
 
     const postsRes = await fbGet(`${GRAPH_BASE}/${pageId}/posts`, {
       access_token: pageToken,
-      fields: 'id,message,story,created_time,comments.summary(true).limit(0)',
+      fields: 'id,message,story,created_time',
       limit: 50,
     });
 
