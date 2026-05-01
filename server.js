@@ -353,6 +353,50 @@ app.get('/export/:pageId/:postId', requireAuth, async (req, res) => {
   }
 });
 
+// Pick a random comment winner for a post
+app.get('/winner/:pageId/:postId', requireAuth, async (req, res) => {
+  const { pageId, postId } = req.params;
+
+  if (!postId.startsWith(`${pageId}_`)) {
+    return res.status(400).json({ error: 'Invalid post reference.' });
+  }
+
+  try {
+    const accountsRes = await fbGet(`${GRAPH_BASE}/me/accounts`, {
+      access_token: req.session.accessToken,
+      fields: 'id,access_token',
+      limit: 100,
+    });
+
+    const page = (accountsRes.data.data || []).find(p => p.id === pageId);
+    if (!page) return res.status(404).json({ error: 'Page not found.' });
+
+    const pageToken = page.access_token;
+
+    let postPermalink = null;
+    try {
+      const postRes = await fbGet(`${GRAPH_BASE}/${postId}`, {
+        access_token: pageToken,
+        fields: 'permalink_url',
+      });
+      postPermalink = postRes.data.permalink_url || null;
+    } catch { /* non-critical */ }
+
+    const comments = await getAllComments(postId, pageToken, req.session.accessToken, postPermalink);
+
+    if (comments.length === 0) {
+      return res.json({ winner: null });
+    }
+
+    const winner = comments[Math.floor(Math.random() * comments.length)];
+    res.json({ winner });
+  } catch (err) {
+    const fbErr = err.response?.data?.error;
+    console.error('[winner]', fbErr || err.message);
+    res.status(500).json({ error: 'Failed to fetch comments.' });
+  }
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {

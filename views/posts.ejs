@@ -32,8 +32,38 @@
     .comment-count {
       font-size: .875rem;
       color: #555;
-      margin-right: .5rem;
     }
+    .post-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: .5rem;
+    }
+    .btn-winner { background: #f5a623; color: #fff; }
+    #winner-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    #winner-modal.visible { display: flex; }
+    .winner-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 32px;
+      max-width: 480px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    }
+    .winner-trophy { font-size: 3rem; display: block; margin-bottom: 12px; }
+    .winner-box h2 { font-size: 1.3rem; margin-bottom: 4px; }
+    .winner-name { font-size: 1.15rem; font-weight: 700; margin: 12px 0 6px; color: #1877F2; }
+    .winner-comment { font-size: .95rem; color: #444; line-height: 1.5; margin-bottom: 16px; }
+    .winner-actions { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; }
     .pagination {
       display: flex;
       gap: .75rem;
@@ -47,6 +77,20 @@
   <div id="loading-overlay" role="status" aria-live="polite">
     <div class="spinner"></div>
     <span>Fetching all comments&hellip; this may take a moment.</span>
+  </div>
+
+  <!-- Winner modal -->
+  <div id="winner-modal" role="dialog" aria-modal="true" aria-labelledby="winner-title">
+    <div class="winner-box">
+      <span class="winner-trophy">&#127942;</span>
+      <h2 id="winner-title">Winner!</h2>
+      <p class="winner-name" id="winner-name"></p>
+      <p class="winner-comment" id="winner-comment"></p>
+      <div class="winner-actions">
+        <a id="winner-link" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary">View Comment</a>
+        <button id="winner-close" class="btn btn-muted">Close</button>
+      </div>
+    </div>
   </div>
 
   <%- include('partials/_nav') %>
@@ -96,6 +140,11 @@
               href="/export/<%= pageId %>/<%= post.id %>"
               class="btn btn-success export-btn"
             >&#8681;&nbsp;Download CSV</a>
+            <button
+              class="btn btn-winner winner-btn"
+              data-page-id="<%= pageId %>"
+              data-post-id="<%= post.id %>"
+            >&#127942;&nbsp;Choose Winner</button>
           </div>
         </div>
       <% } %>
@@ -112,6 +161,39 @@
   </main>
 
   <script>
+    // Winner picker
+    document.querySelectorAll('.winner-btn').forEach(function(btn) {
+      btn.addEventListener('click', async function() {
+        const pageId = btn.dataset.pageId;
+        const postId = btn.dataset.postId;
+        btn.disabled = true;
+        btn.textContent = 'Picking\u2026';
+        try {
+          const res  = await fetch('/winner/' + pageId + '/' + postId);
+          const data = await res.json();
+          if (!res.ok || data.error) { alert(data.error || 'Failed to pick a winner.'); return; }
+          if (!data.winner) { alert('No comments found for this post.'); return; }
+          document.getElementById('winner-name').textContent    = data.winner.Name;
+          document.getElementById('winner-comment').textContent = data.winner.Comment;
+          var linkEl = document.getElementById('winner-link');
+          if (data.winner.Link) { linkEl.href = data.winner.Link; linkEl.style.display = ''; }
+          else { linkEl.style.display = 'none'; }
+          document.getElementById('winner-modal').classList.add('visible');
+        } catch (e) {
+          alert('An error occurred. Please try again.');
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = '&#127942;&nbsp;Choose Winner';
+        }
+      });
+    });
+    document.getElementById('winner-close').addEventListener('click', function() {
+      document.getElementById('winner-modal').classList.remove('visible');
+    });
+    document.getElementById('winner-modal').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('visible');
+    });
+
     // Show the loading overlay when a CSV download starts so the user knows
     // the server is paginating through the Facebook API.
     document.querySelectorAll('.export-btn').forEach(function(btn) {
